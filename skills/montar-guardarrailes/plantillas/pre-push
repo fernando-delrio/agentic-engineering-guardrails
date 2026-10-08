@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# Guardián de main: bloquea el push si lo que se sube no pasa las comprobaciones.
+#
+# Por qué existe (tools_equip, 2026-09-23): se subió a main un commit con solo parte del
+# cambio; el resto se quedó sin commitear en un ordenador. Allí todo compilaba (compila lo que
+# hay en disco), pero el otro ordenador recibió un main roto. Por eso el orden importa:
+#   1. sin cambios pendientes → lo que hay en disco es lo que se sube;
+#   2. solo entonces las comprobaciones demuestran algo.
+#
+# Solo vigila main: las demás ramas pueden ir a medias.
+# Emergencia real: `git push --no-verify` (y avisar de que se ha hecho).
+#
+# Plantilla del plugin guardrails: copiar en .githooks/pre-push, ajustar COMPROBACIONES y
+# activar una vez por ordenador con `git config core.hooksPath .githooks`.
+
+set -u
+
+# Cada línea es un comando que tiene que salir bien antes de subir a main.
+COMPROBACIONES=(
+  "npm --prefix frontend run build"
+  "npm --prefix frontend run lint"
+  # ".venv/Scripts/python.exe scripts/run_tests.py -q"
+)
+
+RAIZ="$(git rev-parse --show-toplevel)"
+
+sube_a_main() {
+  local ref_local sha_local ref_remota sha_remoto
+  local encontrado=1
+  while read -r ref_local sha_local ref_remota sha_remoto; do
+    [ "$ref_remota" = "refs/heads/main" ] && encontrado=0
+  done
+  return $encontrado
+}
+
+bloquear() {
+  echo ""
+  echo "✋ push a main BLOQUEADO: $1"
+  shift
+  printf '   %s\n' "$@"
+  echo ""
+  exit 1
+}
+
+sube_a_main || exit 0
+
+pendientes="$(git -C "$RAIZ" status --porcelain)"
+[ -n "$pendientes" ] && bloquear "hay cambios sin commitear." \
+  "Las comprobaciones verían esos cambios, pero GitHub no los recibiría." \
+  "" "$pendientes" "" \
+  "Si son de este cambio: añádelos al commit. Si son otro trabajo: git stash -u, push y git stash pop."
+
+for comprobacion in "${COMPROBACIONES[@]}"; do
+  echo "🔧 pre-push: $comprobacion"
+  salida="$(cd "$RAIZ" && eval "$comprobacion" 2>&1)" || bloquear "falla «$comprobacion»." \
+    "$(echo "$salida" | sed 's/\x1b\[[0-9;]*m//g' | tail -15)"
+done
+
+echo "✅ pre-push: todo en verde, subiendo."

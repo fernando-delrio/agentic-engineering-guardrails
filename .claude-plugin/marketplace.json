@@ -1,0 +1,15 @@
+{
+  "name": "agentic-engineering-guardrails",
+  "description": "Guardarraíles de ingeniería con agentes de Fernando del Río.",
+  "owner": {
+    "name": "Fernando del Río"
+  },
+  "plugins": [
+    {
+      "name": "guardrails",
+      "description": "Git solo para Fernando, flujo SDD con aprobaciones, /arranque y /cierre, y plantillas del arnés para cada proyecto.",
+      "source": "./",
+      "category": "development"
+    }
+  ]
+}

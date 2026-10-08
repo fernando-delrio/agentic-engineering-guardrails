@@ -1,0 +1,10 @@
+{
+  "name": "guardrails",
+  "version": "0.1.0",
+  "description": "Arnés para trabajar con agentes de IA sin perder el control: Git solo lo toca Fernando (hook que lo bloquea), flujo SDD con aprobaciones humanas, comandos /arranque y /cierre para cambiar de ordenador, y plantillas para montar AGENTS.md, MEMORY.md y los guardarraíles en cada proyecto.",
+  "author": {
+    "name": "Fernando del Río"
+  },
+  "repository": "https://github.com/fernando-delrio/agentic-engineering-guardrails",
+  "keywords": ["guardrails", "harness", "sdd", "agents", "memoria", "git"]
+}
